@@ -1,0 +1,3 @@
+[submodule "cvcalib"]
+	path = cvcalib
+	url = https://github.com/Algomorph/cvcalib
