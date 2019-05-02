@@ -19,13 +19,13 @@ def yt_search(query, exclude="completely garbage string lmao"):
             results.append('https://www.youtube.com' + vid['href'])
     return results
 
-def download_yt_video(url, output_dir, output_name):
+def download_yt_video(url, fmt, ext, output_dir, output_name):
 
     ydl_opts = {
-        'format': 'mp4',
+        'format': fmt,
         'outtmpl': os.path.join(output_dir, '%(id)s.%(ext)s')
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
         meta = ydl.extract_info(url, download=False)
-        shutil.move(os.path.join(output_dir, f"{meta['id']}.mp4"), os.path.join(output_dir, output_name))
+        shutil.move(os.path.join(output_dir, f"{meta['id']}.{ext}"), os.path.join(output_dir, output_name))
