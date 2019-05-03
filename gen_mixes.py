@@ -1,6 +1,7 @@
 import youtube_dl
 import utils
 import os
+from subprocess import Popen, PIPE
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips
 import numpy as np
 
@@ -10,11 +11,10 @@ curr_dir = "/home/sean/Documents/experiments/stage-mix-generator/"
 download_dir = os.path.join(curr_dir, 'temp')
 
 # get top kpop songs
-song_titles = [
-    'Chung ha Gotta Go',
-    'BTS Boy With Luv',
-    'Blackpink Kill This Love',
-    'ITZY DALLA DALLA'
+songs = [
+    { 'artist': 'Red Velvet', 'title': 'Bad Boy' },
+    #{ 'artist': 'ITZY', 'title': 'DALLA DALLA' },
+    #{ 'artist': 'Chung ha', 'title': 'Gotta Go' }
 ]
 
 LA_FMT = '140'
@@ -26,11 +26,11 @@ SV_EXT = 'mp4'
 SA_FMT = '140'
 SA_EXT = 'm4a'
 
-for song_title in song_titles:
+for song in songs:
 
     # get lyrics and stage videos from search
-    lyrics_video_url = utils.yt_search(song_title+' lyrics')[0]
-    stage_video_urls = utils.yt_search(song_title+' live performance', exclude='stage mix')[:5]
+    lyrics_video_url = utils.yt_search(song['artist']+" "+song['title']+' lyrics')[0]
+    stage_video_urls = utils.yt_search(song['artist']+" "+song['title']+' live performance', exclude='stage mix')[:8]
 
     # download videos
     utils.download_yt_video(lyrics_video_url, LA_FMT, LA_EXT, download_dir, f"lyrics_audio.{LA_EXT}")
@@ -58,9 +58,10 @@ for song_title in song_titles:
             stage_song_starts.append((1, 0))
     
     # get subclips of the song in the stage videos
-    stage_videos, stage_audios = [], []
+    stage_videos_used, stage_videos, stage_audios = [], [], []
     for i in range(len(stage_video_paths)):
         if stage_song_starts[i][0] == 0:
+            stage_videos_used.append(i)
             stage_videos.append(VideoFileClip(stage_video_paths[i]).subclip(stage_song_starts[i][1]))
             stage_audios.append(AudioFileClip(stage_audio_paths[i]).subclip(stage_song_starts[i][1]))
     
@@ -79,12 +80,25 @@ for song_title in song_titles:
     # assemble clips 
     final_clip = concatenate_videoclips(clips)
 
-    # replace audio with lyrics video
-    #final_clip = final_clip.set_duration(lyrics_video.duration)
-    #final_clip = final_clip.set_audio(lyrics_video.audio)
-
     # replace audio with first stage video
     final_clip = final_clip.set_audio(stage_audios[0])
 
     # write mix
-    final_clip.write_videofile(f"{song_title}-stage_mix.mp4")
+    final_clip.write_videofile(f"stage_mix.mp4")
+
+    # upload video to youtube
+    title = f"{song['artist']} - {song['title']} - Stage Mix"
+    desc = "Videos Used: \n" + "\n".join([ stage_video_urls[i] for i in stage_videos_used ])
+    args = [
+        "python", 
+        f"{os.path.join(curr_dir, 'youtube-upload', 'bin', 'youtube-upload')}",
+        f"--title={title}",
+        f"--description={desc}",
+        f"{os.path.join(curr_dir, 'stage_mix.mp4')}",
+        "--privacy",
+        "private"
+    ]
+    process = Popen(args, stdout=PIPE, stderr=PIPE)
+    output, err = process.communicate()
+    exit_code = process.wait()
+    print(exit_code, str(err), str(output))
