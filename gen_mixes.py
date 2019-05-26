@@ -1,6 +1,7 @@
 import youtube_dl
 import utils
 import os
+import glob
 from subprocess import Popen, PIPE
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips
 import numpy as np
