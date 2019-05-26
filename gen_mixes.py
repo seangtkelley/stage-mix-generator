@@ -42,7 +42,7 @@ for song in songs:
             print(e)
             stage_video_urls.remove(url)
 
-    lyrics_audio_path = os.path.join(download_dir, f"lyrics_audio.{LA_EXT}")
+    song_audio_path = os.path.join(download_dir, f"lyrics_audio.{LA_EXT}")
     stage_video_paths = [ os.path.join(download_dir, f"stage_video{i}.{SV_EXT}") for i in range(len(stage_video_urls)) ]
     stage_audio_paths = [ os.path.join(download_dir, f"stage_audio{i}.{SA_EXT}") for i in range(len(stage_video_urls)) ]
     
@@ -64,14 +64,18 @@ for song in songs:
             stage_videos_used.append(i)
             stage_videos.append(VideoFileClip(stage_video_paths[i]).subclip(stage_song_starts[i][1]))
             stage_audios.append(AudioFileClip(stage_audio_paths[i]).subclip(stage_song_starts[i][1]))
+
+    if len(stage_videos) == 0:
+        print("No suitible videos found")
+        continue
     
-    # load lyrics audio
-    lyrics_audio = AudioFileClip(lyrics_audio_path)
+    # load song audio
+    song_audio = AudioFileClip(song_audio_path)
 
     # every 5 seconds during the song, splice clips from different performances
     clips = []
     stage_video_idx = 0
-    for step in np.arange(0, lyrics_audio.duration, 5):
+    for step in np.arange(0, song_audio.duration, 5):
         if step+5 < stage_videos[stage_video_idx].duration:
             clips.append(stage_videos[stage_video_idx].subclip(step, step+5))
         
@@ -102,3 +106,7 @@ for song in songs:
     output, err = process.communicate()
     exit_code = process.wait()
     print(exit_code, str(err), str(output))
+
+    # delete the downloaded videos
+    for i in glob.glob(os.path.join(download_dir, '*')):
+        os.remove(i)
