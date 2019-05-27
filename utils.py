@@ -5,6 +5,15 @@ import urllib.request
 from bs4 import BeautifulSoup
 from subprocess import Popen, PIPE
 
+LA_FMT = '140'
+LA_EXT = 'm4a'
+
+SV_FMT = '137'
+SV_EXT = 'mp4'
+
+SA_FMT = '140'
+SA_EXT = 'm4a'
+
 def yt_search(query, exclude="completely garbage string lmao"):
     query = urllib.parse.quote(query)
     url = "https://www.youtube.com/results?sp=EgIQAQ%253D%253D&search_query="+query

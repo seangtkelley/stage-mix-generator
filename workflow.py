@@ -7,17 +7,8 @@ import numpy as np
 
 from cvcalib.audiosync import offset
 
-curr_dir = os.path.dirname(os.path.abspath(__file__))
-download_dir = os.path.join(curr_dir, 'temp')
-
-LA_FMT = '140'
-LA_EXT = 'm4a'
-
-SV_FMT = '137'
-SV_EXT = 'mp4'
-
-SA_FMT = '140'
-SA_EXT = 'm4a'
+CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+DWNLD_DIR = os.path.join(CURR_DIR, 'temp')
 
 def gen_vanilla_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths):
 
@@ -28,7 +19,7 @@ def gen_vanilla_mix(song_audio_filepath, stage_video_filepaths, stage_audio_file
     stage_song_starts = []
     for i in range(len(stage_video_filepaths)):
         try:
-            output = offset.find_time_offset([song_audio_filename, stage_audio_filenames[i]], download_dir+os.path.sep, [0, 0])
+            output = offset.find_time_offset([song_audio_filename, stage_audio_filenames[i]], DWNLD_DIR+os.path.sep, [0, 0])
             print(output)
             stage_song_starts.append(output[0])
         except Exception as e:
@@ -66,7 +57,7 @@ def gen_vanilla_mix(song_audio_filepath, stage_video_filepaths, stage_audio_file
     final_clip = final_clip.set_audio(stage_audios[0])
 
     # write mix
-    mix_filepath = os.path.join(curr_dir, "stage_mix.mp4")
+    mix_filepath = os.path.join(CURR_DIR, "stage_mix.mp4")
     final_clip.write_videofile(mix_filepath)
 
     return mix_filepath, stage_videos_used
@@ -76,19 +67,18 @@ def main():
     lyrics_video_url, stage_video_urls = utils.find_urls_from_search('BTS', 'Fake Love')
 
     # download videos
-    utils.download_yt_video(lyrics_video_url, LA_FMT, LA_EXT, download_dir, f"lyrics_audio.{LA_EXT}")
+    utils.download_yt_video(lyrics_video_url, utils.LA_FMT, utils.LA_EXT, DWNLD_DIR, f"lyrics_audio.{utils.LA_EXT}")
     for i, url in enumerate(stage_video_urls):
         try:
-            utils.download_yt_video(url, SV_FMT, SV_EXT, download_dir, f"stage_video{i}.{SV_EXT}")
-            utils.download_yt_video(url, SA_FMT, SA_EXT, download_dir, f"stage_audio{i}.{SA_EXT}")
+            utils.download_yt_video(url, utils.SV_FMT, utils.SV_EXT, DWNLD_DIR, f"stage_video{i}.{utils.SV_EXT}")
+            utils.download_yt_video(url, utils.SA_FMT, utils.SA_EXT, DWNLD_DIR, f"stage_audio{i}.{utils.SA_EXT}")
         except Exception as e:
             print(e)
-            print("dank")
             stage_video_urls.remove(url)
 
-    song_audio_path = os.path.join(download_dir, f"lyrics_audio.{LA_EXT}")
-    stage_video_paths = [ os.path.join(download_dir, f"stage_video{i}.{SV_EXT}") for i in range(len(stage_video_urls)) ]
-    stage_audio_paths = [ os.path.join(download_dir, f"stage_audio{i}.{SA_EXT}") for i in range(len(stage_video_urls)) ]
+    song_audio_path = os.path.join(DWNLD_DIR, f"lyrics_audio.{utils.LA_EXT}")
+    stage_video_paths = [ os.path.join(DWNLD_DIR, f"stage_video{i}.{utils.SV_EXT}") for i in range(len(stage_video_urls)) ]
+    stage_audio_paths = [ os.path.join(DWNLD_DIR, f"stage_audio{i}.{utils.SA_EXT}") for i in range(len(stage_video_urls)) ]
 
     mix_filepath, stage_videos_used = gen_vanilla_mix(song_audio_path, stage_video_paths, stage_audio_paths)
 
