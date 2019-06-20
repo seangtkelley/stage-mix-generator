@@ -4,6 +4,14 @@ import youtube_dl
 import urllib.request
 from bs4 import BeautifulSoup
 from subprocess import Popen, PIPE
+import datetime
+
+import scenedetect
+from scenedetect.video_manager import VideoManager
+from scenedetect.scene_manager import SceneManager
+from scenedetect.frame_timecode import FrameTimecode
+from scenedetect.stats_manager import StatsManager
+from scenedetect.detectors import ContentDetector
 
 LA_FMT = '140'
 LA_EXT = 'm4a'
@@ -59,3 +67,55 @@ def upload_to_yt(filepath, title, desc, private=True):
     output, err = process.communicate()
     exit_code = process.wait()
     print(exit_code, str(err), str(output))
+
+def detect_scenes(filepath):
+    video_manager = VideoManager([filepath])
+    stats_manager = StatsManager()
+    scene_manager = SceneManager(stats_manager)
+    # Add ContentDetector algorithm (constructor takes detector options like threshold).
+    scene_manager.add_detector(ContentDetector(threshold=40))
+    base_timecode = video_manager.get_base_timecode()
+
+    STATS_FILE_PATH = f"{filepath.split('/')[-1]}.stats.csv"
+
+    try:
+        # If stats file exists, load it.
+        if os.path.exists(STATS_FILE_PATH):
+            # Read stats from CSV file opened in read mode:
+            with open(STATS_FILE_PATH, 'r') as stats_file:
+                stats_manager.load_from_csv(stats_file, base_timecode)
+
+        # Set downscale factor to improve processing speed.
+        video_manager.set_downscale_factor()
+
+        # Start video_manager.
+        video_manager.start()
+
+        # Perform scene detection on video_manager.
+        scene_manager.detect_scenes(frame_source=video_manager)
+
+        # Obtain list of detected scenes.
+        scene_list = scene_manager.get_scene_list(base_timecode)
+        # Like FrameTimecodes, each scene in the scene_list can be sorted if the
+        # list of scenes becomes unsorted.
+
+        # We only write to the stats file if a save is required:
+        if stats_manager.is_save_required():
+            with open(STATS_FILE_PATH, 'w') as stats_file:
+                stats_manager.save_to_csv(stats_file, base_timecode)
+
+        # print('List of scenes obtained:')
+        # for i, scene in enumerate(scene_list):
+        #     print('    Scene %2d: Start %s / Frame %d, End %s / Frame %d' % (
+        #         i+1,
+        #         scene[0].get_timecode(), scene[0].get_frames(),
+        #         scene[1].get_timecode(), scene[1].get_frames(),))
+            
+        return scene_list
+        
+    finally:
+        video_manager.release()
+
+def timecode_to_seconds(timecode):
+    t = datetime.datetime.strptime(timecode, "%H:%M:%S.%f")
+    return 60 * t.minute * t.hour

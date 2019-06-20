@@ -4,13 +4,14 @@ import os
 import glob
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_videoclips
 import numpy as np
+from secrets import randbelow
 
 from cvcalib.audiosync import offset
 
 CURR_DIR = os.path.dirname(os.path.abspath(__file__))
 DWNLD_DIR = os.path.join(CURR_DIR, 'temp')
 
-def gen_vanilla_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths):
+def gen_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths, edit_style=0):
 
     song_audio_filename = song_audio_filepath.split(os.path.sep)[-1]
     stage_audio_filenames = [path.split(os.path.sep)[-1] for path in stage_audio_filepaths]
@@ -41,14 +42,37 @@ def gen_vanilla_mix(song_audio_filepath, stage_video_filepaths, stage_audio_file
     # load song audio
     song_audio = AudioFileClip(song_audio_filepath)
 
-    # every 5 seconds during the song, splice clips from different performances
     clips = []
-    stage_video_idx = 0
-    for step in np.arange(0, song_audio.duration, 5):
-        if step+5 < stage_videos[stage_video_idx].duration:
-            clips.append(stage_videos[stage_video_idx].subclip(step, step+5))
+    if edit_style == 1:
+        # find cuts in videos
+        video_scenes = []
+        for idx in stage_videos_used:
+            video_scenes.append(utils.detect_scenes(stage_video_filepaths[idx]))
         
-        stage_video_idx = (stage_video_idx + 1) % len(stage_videos)
+        print(video_scenes)
+
+        # assemble clips
+        curr_time = 0.0
+        while curr_time < song_audio.duration:
+            print("curr_time:", curr_time)
+            # choose random video
+            rand_idx = randbelow(len(stage_videos))
+
+            # get next cut in this video
+            for scene in video_scenes[rand_idx]:
+                scene_end = utils.timecode_to_seconds(scene[1].get_timecode()) - stage_song_starts[rand_idx][1]
+                if scene_end > curr_time+1.0:
+                    clips.append(stage_videos[rand_idx].subclip(curr_time, scene_end))   
+                    curr_time = scene_end
+
+    else:
+        # every 5 seconds during the song, splice clips from different performances
+        stage_video_idx = 0
+        for step in np.arange(0, song_audio.duration, 5):
+            if step+5 < stage_videos[stage_video_idx].duration:
+                clips.append(stage_videos[stage_video_idx].subclip(step, step+5))
+            
+            stage_video_idx = (stage_video_idx + 1) % len(stage_videos)
 
     # assemble clips 
     final_clip = concatenate_videoclips(clips)
@@ -80,7 +104,7 @@ def main():
     stage_video_paths = [ os.path.join(DWNLD_DIR, f"stage_video{i}.{utils.SV_EXT}") for i in range(len(stage_video_urls)) ]
     stage_audio_paths = [ os.path.join(DWNLD_DIR, f"stage_audio{i}.{utils.SA_EXT}") for i in range(len(stage_video_urls)) ]
 
-    mix_filepath, stage_videos_used = gen_vanilla_mix(song_audio_path, stage_video_paths, stage_audio_paths)
+    mix_filepath, stage_videos_used = gen_mix(song_audio_path, stage_video_paths, stage_audio_paths, edit_style=1)
 
     utils.upload_to_yt(mix_filepath, 'BTS - Fake Love - Stage Mix', "Videos Used: \n" + "\n".join([ stage_video_urls[i] for i in stage_videos_used ]))
 
