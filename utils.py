@@ -117,5 +117,5 @@ def detect_scenes(filepath):
         video_manager.release()
 
 def timecode_to_seconds(timecode):
-    t = datetime.datetime.strptime(timecode, "%H:%M:%S.%f")
-    return 60 * t.minute * t.hour
+    hrs, mins, secs = list(map(float, timecode.split(":")))
+    return secs + mins*60 + hrs*3600

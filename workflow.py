@@ -48,22 +48,24 @@ def gen_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths, e
         video_scenes = []
         for idx in stage_videos_used:
             video_scenes.append(utils.detect_scenes(stage_video_filepaths[idx]))
-        
-        print(video_scenes)
 
         # assemble clips
         curr_time = 0.0
-        while curr_time < song_audio.duration:
-            print("curr_time:", curr_time)
+        while curr_time < float(song_audio.duration-10):
             # choose random video
             rand_idx = randbelow(len(stage_videos))
 
+            # skip shorter videos
+            if curr_time > float(stage_videos[rand_idx].duration)+2:
+                continue
+
             # get next cut in this video
-            for scene in video_scenes[rand_idx]:
+            for i, scene in enumerate(video_scenes[rand_idx]):
                 scene_end = utils.timecode_to_seconds(scene[1].get_timecode()) - stage_song_starts[rand_idx][1]
-                if scene_end > curr_time+1.0:
+                if scene_end > curr_time+1.0 and scene_end < float(song_audio.duration):
                     clips.append(stage_videos[rand_idx].subclip(curr_time, scene_end))   
                     curr_time = scene_end
+                    break
 
     else:
         # every 5 seconds during the song, splice clips from different performances
