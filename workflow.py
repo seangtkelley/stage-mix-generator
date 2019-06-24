@@ -51,7 +51,10 @@ def gen_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths, e
 
         # assemble clips
         curr_time = 0.0
-        while curr_time < float(song_audio.duration-10):
+        print("song duration:", float(song_audio.duration))
+        while curr_time < float(song_audio.duration):
+            print("curr_time:", curr_time)
+
             # choose random video
             rand_idx = randbelow(len(stage_videos))
 
@@ -60,9 +63,10 @@ def gen_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths, e
                 continue
 
             # get next cut in this video
+            # TODO: make this more efficient
             for i, scene in enumerate(video_scenes[rand_idx]):
                 scene_end = utils.timecode_to_seconds(scene[1].get_timecode()) - stage_song_starts[rand_idx][1]
-                if scene_end > curr_time+1.0 and scene_end < float(song_audio.duration):
+                if scene_end > curr_time+1.0 and scene_end < float(song_audio.duration)+5:
                     clips.append(stage_videos[rand_idx].subclip(curr_time, scene_end))   
                     curr_time = scene_end
                     break
