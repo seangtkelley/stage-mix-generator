@@ -34,7 +34,7 @@ def create():
     stage_audio_paths = [ os.path.join(workflow.DWNLD_DIR, f"stage_audio{i}.{utils.SA_EXT}") for i in range(len(stage_video_urls)) ]
 
     # create mix
-    edit_style = request.form.get('editingOption', 0)
+    edit_style = int(request.form.get('editingOption', 0))
     mix_filepath, stage_videos_used = workflow.gen_mix(song_audio_path, stage_video_paths, stage_audio_paths, edit_style=edit_style)
 
     if request.form.get('ytUpload', False):
