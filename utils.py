@@ -72,8 +72,9 @@ def detect_scenes(filepath):
     video_manager = VideoManager([filepath])
     stats_manager = StatsManager()
     scene_manager = SceneManager(stats_manager)
+    
     # Add ContentDetector algorithm (constructor takes detector options like threshold).
-    scene_manager.add_detector(ContentDetector(threshold=40))
+    scene_manager.add_detector(ContentDetector(threshold=40, min_scene_len=30))
     base_timecode = video_manager.get_base_timecode()
 
     STATS_FILE_PATH = f"{filepath.split('/')[-1]}.stats.csv"

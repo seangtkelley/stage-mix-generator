@@ -7,12 +7,6 @@ numpy==1.13.3
 httplib2==0.12.3
 Flask==1.0.2
 scikit_image==0.14.1
-PyQt4==4.11.4
-PySide==1.2.4
 google_api_python_client==1.7.9
 beautifulsoup4==4.7.1
-progressbar2==3.42.0
 scenedetect==0.5
-secrets==1.0.2
-skimage==0.0
-PyYAML==5.1.1
