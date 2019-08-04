@@ -90,6 +90,14 @@ def gen_mix(song_audio_filepath, stage_video_filepaths, stage_audio_filepaths, e
     mix_filepath = os.path.join(CURR_DIR, "stage_mix.mp4")
     final_clip.write_videofile(mix_filepath)
 
+    # close videos
+    song_audio.reader.close_proc()
+    for video in stage_videos:
+        video.reader.close()
+    
+    for audio in stage_audios:
+        audio.reader.close_proc()
+
     return mix_filepath, stage_videos_used
 
 def main():
