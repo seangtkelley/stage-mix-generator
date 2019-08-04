@@ -1,0 +1,21 @@
+name: stage-mix-generator
+channels:
+  - conda-forge
+dependencies:
+  - python=3.6
+  - pip
+  - opencv
+  - numpy
+  - flask
+  - moviepy
+  - scipy
+  - lxml
+  - youtube-dl
+  - scikit-image
+  - google-api-python-client=1.7.4
+  - beautifulsoup4
+  - imageio=2.4.1
+  - requests
+  - oauth2client
+  - pip:
+    - scenedetect
